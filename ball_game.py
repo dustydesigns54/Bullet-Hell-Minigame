@@ -20,6 +20,8 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Ball Game")
 font = pygame.font.SysFont(None, 48)
 
+joystick = None
+
 #gameplay status
 alive = True
 death_time = None
@@ -59,6 +61,16 @@ while running:
     dt_ms = now - last_tick
     last_tick = now
 
+     # Initialize joystick
+    pygame.joystick.init()
+    
+    if pygame.joystick.get_count() > 0:
+        joystick = pygame.joystick.Joystick(0)
+        joystick.init()
+        print(f"Controller connected: {joystick.get_name()}")
+        print(f"Number of axes: {joystick.get_numaxes()}")
+        print(f"Number of buttons: {joystick.get_numbuttons()}")
+
     #-------------------------------------------------------------------
     # if alive, allow movement with either wasd or arrow keys
     #-------------------------------------------------------------------
@@ -76,13 +88,31 @@ while running:
         if keys[pygame.K_DOWN] or keys[pygame.K_s]: 
             dy += 1
 
+
+        left_x = joystick.get_axis(0)
+        left_y = joystick.get_axis(1)
+
+        print(f"0: {joystick.get_axis(0)}")
+        print(f"1: {joystick.get_axis(1)}")
+        print(f"1: {joystick.get_axis(2)}")
+        print(f"1: {joystick.get_axis(3)}")
+        print(f"1: {joystick.get_axis(4)}")
+        print(f"1: {joystick.get_axis(5)}")
+        
+        # Apply deadzone
+        deadzone = 0.15
+        if abs(left_x) > deadzone:
+            ball_x += left_x * speed
+        if abs(left_y) > deadzone:
+            ball_y += left_y * speed
+
         #equalize speed for all 8 compass directions
-        if dx != 0 or dy != 0:
-            length = math.hypot(dx, dy)
-            dx /= length 
-            dy /= length
-            ball_x += dx * speed
-            ball_y += dy * speed
+        # if dx != 0 or dy != 0:
+        #     length = math.hypot(dx, dy)
+        #     dx /= length 
+        #     dy /= length
+        #     ball_x += dx * speed
+        #     ball_y += dy * speed
 
     #set border restrictions
     if ball_x - ball_radius < 0:
