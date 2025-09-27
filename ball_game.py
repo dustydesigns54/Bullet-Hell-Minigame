@@ -91,13 +91,6 @@ while running:
 
         left_x = joystick.get_axis(0)
         left_y = joystick.get_axis(1)
-
-        print(f"0: {joystick.get_axis(0)}")
-        print(f"1: {joystick.get_axis(1)}")
-        print(f"1: {joystick.get_axis(2)}")
-        print(f"1: {joystick.get_axis(3)}")
-        print(f"1: {joystick.get_axis(4)}")
-        print(f"1: {joystick.get_axis(5)}")
         
         # Apply deadzone
         deadzone = 0.15
