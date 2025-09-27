@@ -14,7 +14,7 @@ pygame.init()
 #-------------------------------------------------------------------
 
 #screen and colors
-width, height = 800, 600
+width, height = 1200, 700
 black, green, red = (0, 0, 0), (0, 255, 0), (255, 0, 0)
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Ball Game")
