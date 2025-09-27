@@ -76,19 +76,6 @@ while running:
     #-------------------------------------------------------------------
 
     if alive:
-        keys = pygame.key.get_pressed()
-        dx, dy = 0, 0
-
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]: 
-            dx -= 1
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]: 
-            dx += 1
-        if keys[pygame.K_UP] or keys[pygame.K_w]: 
-            dy -= 1
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]: 
-            dy += 1
-
-
         left_x = joystick.get_axis(0)
         left_y = joystick.get_axis(1)
         
@@ -98,14 +85,6 @@ while running:
             ball_x += left_x * speed
         if abs(left_y) > deadzone:
             ball_y += left_y * speed
-
-        #equalize speed for all 8 compass directions
-        # if dx != 0 or dy != 0:
-        #     length = math.hypot(dx, dy)
-        #     dx /= length 
-        #     dy /= length
-        #     ball_x += dx * speed
-        #     ball_y += dy * speed
 
     #set border restrictions
     if ball_x - ball_radius < 0:
