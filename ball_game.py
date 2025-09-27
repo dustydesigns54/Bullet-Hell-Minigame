@@ -1,4 +1,5 @@
 import pygame, sys, math, random
+from player import Player
 
 def circle_bullet_collide(cx, cy, r, rect):
     closest_x = max(rect.left, min(cx, rect.right))
@@ -22,18 +23,13 @@ font = pygame.font.SysFont(None, 48)
 
 joystick = None
 
-#gameplay status
-alive = True
-death_time = None
-respawn_delay = 1500
+player = Player(width / 2, height / 2)
 
-#ball properties
-ball_radius, speed = 10, 8
-ball_x, ball_y = width / 2, height / 2
+respawn_delay = 1500
 
 #bullet properties
 bullets = []
-BULLET_W, BULLET_H = 20, 10
+BULLET_W, BULLET_H = 10, 10
 bullet_speed = 10
 spawn_interval = 1000
 starting_spawn_interval = spawn_interval
@@ -75,26 +71,26 @@ while running:
     # if alive, allow movement with either wasd or arrow keys
     #-------------------------------------------------------------------
 
-    if alive:
+    if player.alive:
         left_x = joystick.get_axis(0)
         left_y = joystick.get_axis(1)
         
         # Apply deadzone
         deadzone = 0.15
         if abs(left_x) > deadzone:
-            ball_x += left_x * speed
+            player.x += left_x * player.speed
         if abs(left_y) > deadzone:
-            ball_y += left_y * speed
+            player.y += left_y * player.speed
 
     #set border restrictions
-    if ball_x - ball_radius < 0:
-        ball_x = ball_radius
-    if ball_x + ball_radius > width:
-        ball_x = width - ball_radius
-    if ball_y - ball_radius < 0:
-        ball_y = ball_radius
-    if ball_y + ball_radius > height:
-        ball_y = height - ball_radius
+    if player.x - player.ball_radius < 0:
+        player.x = player.ball_radius
+    if player.x + player.ball_radius > width:
+        player.x = width - player.ball_radius
+    if player.y - player.ball_radius < 0:
+        player.y = player.ball_radius
+    if player.y + player.ball_radius > height:
+        player.y = height - player.ball_radius
 
     #-------------------------------------------------------------------
     # handle bullets, remove bullets that are off screen
@@ -115,21 +111,21 @@ while running:
     #-------------------------------------------------------------------
 
     #if alive, check for collision, indicate death
-    if alive:
+    if player.alive:
         for b in bullets:
-            if circle_bullet_collide(ball_x, ball_y, ball_radius, b):
-                alive = False
+            if circle_bullet_collide(player.x, player.y, player.ball_radius, b):
+                player.alive = False
                 death_time = now
                 break
     
     #disables movement while waiting for respawn
-    if not alive and now - death_time >= respawn_delay:
+    if not player.alive and now - death_time >= respawn_delay:
         ball_x, ball_y = width / 2, height /2 
         bullets.clear()
         spawn_interval = starting_spawn_interval
         accum_ms = 0
         next_ramp_time = now + ramp_every
-        alive = True
+        player.alive = True
         death_time = None
 
     #-------------------------------------------------------------------
@@ -154,14 +150,14 @@ while running:
 
     #draw screen and circle
     screen.fill(black) 
-    pygame.draw.circle(screen, green, (int(ball_x), int(ball_y)), ball_radius)
+    pygame.draw.circle(screen, green, (int(player.x), int(player.y)), player.ball_radius)
 
     #draw bullets
     for bullet in bullets:
         pygame.draw.rect(screen, red, bullet)
 
-    #if not alive, print death screen
-    if not alive:
+    #if not player.alive, print death screen
+    if not player.alive:
         overlay = pygame.Surface((width, height), pygame.SRCALPHA)
         overlay.fill((255, 0, 0, 120))
         screen.blit(overlay, (0, 0))
