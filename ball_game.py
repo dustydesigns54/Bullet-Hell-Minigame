@@ -23,13 +23,13 @@ font = pygame.font.SysFont(None, 48)
 
 joystick = None
 
-player = Player(width / 2, height / 2, 10)
+player = Player(width / 2, height / 2)
 
 respawn_delay = 1500
 
 #bullet properties
 bullets = []
-BULLET_W, BULLET_H = 20, 10
+BULLET_W, BULLET_H = 10, 10
 bullet_speed = 10
 spawn_interval = 1000
 starting_spawn_interval = spawn_interval
