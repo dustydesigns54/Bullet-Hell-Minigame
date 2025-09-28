@@ -8,7 +8,7 @@ class Enemy:
         self.y = y
         self.color = RED
         self.radius = 15
-        self.score_value = 100
+        self.score_value = 200
         self.health = 50
         self.speed = 2.5
     

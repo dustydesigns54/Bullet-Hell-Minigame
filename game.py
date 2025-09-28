@@ -20,6 +20,8 @@ font = pygame.font.SysFont(None, 30)
 #entities
 player = Player(WIDTH / 2, HEIGHT / 2)
 score = 0
+og_score = 0
+level_up = 999
 
 bullets = []
 bullet_delay = 10
@@ -80,7 +82,7 @@ while running:
                 score += enemy.score_value
                 break
         #remove bullets off screen
-        if bullet.x > WIDTH or bullet.x < 0 or bullet.y > HEIGHT or bullet.y < 0:
+        if bullet.x > WIDTH + 20 or bullet.x < -20 or bullet.y > HEIGHT + 20 or bullet.y < -20:
             bullets.remove(bullet)
         bullet.update()
 
@@ -91,8 +93,11 @@ while running:
         enemy_spawn_timer = 0
 
     #increase difficulty
-
-    #disables movement while waiting for respawn
+    if score > og_score + level_up:
+        player.level += 1
+        og_score += level_up + 1
+        level_up += 1000
+        enemy_spawn_delay -= enemy_spawn_delay * 0.2
 
     #draw screen
     screen.fill(BLACK) 
@@ -120,8 +125,10 @@ while running:
         bullet.draw(screen)
     
     #draw ui elements (score, level, time)
-    stats_display = font.render(f"Score: {score}", True, (255, 255, 255))
-    screen.blit(stats_display, (25, 25))
+    score_display = font.render(f"Score: {score}", True, (255, 255, 255))
+    screen.blit(score_display, (25, 25))
+    level_display = font.render(f"Level: {player.level}", True, (255, 255, 255))
+    screen.blit(level_display, (25, 50))
 
     #print death screen
     if not player.alive:
