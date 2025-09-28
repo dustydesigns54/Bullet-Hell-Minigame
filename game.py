@@ -15,7 +15,7 @@ pygame.init()
 #screen and colors
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Ball Game")
-font = pygame.font.SysFont(None, 48)
+font = pygame.font.SysFont(None, 30)
 
 #entities
 player = Player(WIDTH / 2, HEIGHT / 2)
@@ -77,7 +77,7 @@ while running:
             if enemy.check_collision_with_bullet(bullet):
                 bullets.remove(bullet)
                 enemies.remove(enemy) # replace with kill enemy
-                #increase score 
+                score += enemy.score_value
                 break
         #remove bullets off screen
         if bullet.x > WIDTH or bullet.x < 0 or bullet.y > HEIGHT or bullet.y < 0:
@@ -96,6 +96,7 @@ while running:
 
     #draw screen
     screen.fill(BLACK) 
+
     #grid lines
 
     #draw enemies
@@ -108,6 +109,10 @@ while running:
     #draw bullets
     for bullet in bullets:
         bullet.draw(screen)
+    
+    #draw ui elements (score, level, time)
+    stats_display = font.render(f"Score: {score}", True, (255, 255, 255))
+    screen.blit(stats_display, (25, 25))
 
     #print death screen
     if not player.alive:
