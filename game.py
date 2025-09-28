@@ -40,6 +40,7 @@ if pygame.joystick.get_count() > 0:
     joystick = pygame.joystick.Joystick(0)
     joystick.init()
 
+#game loop
 running = True
 while running:
     for event in pygame.event.get():
@@ -79,6 +80,8 @@ while running:
                 #increase score 
                 break
         #remove bullets off screen
+        if bullet.x > WIDTH or bullet.x < 0 or bullet.y > HEIGHT or bullet.y < 0:
+            bullets.remove(bullet)
         bullet.update()
 
     #create enemies
