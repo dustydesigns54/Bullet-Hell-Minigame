@@ -8,7 +8,7 @@ def spawn_enemy():
     x_spawn_points = [0, WIDTH, random.randint(0, WIDTH), random.randint(0, WIDTH)]
     y_spawn_points = [random.randint(0, HEIGHT), random.randint(0, HEIGHT), 0, HEIGHT]
     choice = random.randint(0, 3)
-    enemies.append(Enemy(x_spawn_points[choice], y_spawn_points[choice]))
+    enemies.append(Enemy(x_spawn_points[choice], y_spawn_points[choice], player.level))
 
 pygame.init()
 
@@ -21,7 +21,7 @@ font = pygame.font.SysFont(None, 30)
 player = Player(WIDTH / 2, HEIGHT / 2)
 score = 0
 og_score = 0
-level_up = 999
+level_up = 1999
 
 bullets = []
 bullet_delay = 10
@@ -29,7 +29,7 @@ shoot_timer = 0
 
 enemies = []
 enemy_spawn_timer = 0
-enemy_spawn_delay = 100
+enemy_spawn_delay = 250
 
 #settup
 last_tick = pygame.time.get_ticks()
@@ -89,15 +89,17 @@ while running:
     #create enemies
     enemy_spawn_timer += 1
     if enemy_spawn_timer >= enemy_spawn_delay:
-        spawn_enemy()
+        for i in range(0, player.level):
+            spawn_enemy()
         enemy_spawn_timer = 0
 
-    #increase difficulty
+    #handle level up (increase difficulty, increase weapon power)
     if score > og_score + level_up:
         player.level += 1
         og_score += level_up + 1
-        level_up += 1000
-        enemy_spawn_delay -= enemy_spawn_delay * 0.2
+        level_up += 3000
+        enemy_spawn_delay -= enemy_spawn_delay * 0.10
+        bullet_delay -= bullet_delay * 0.10
 
     #draw screen
     screen.fill(BLACK) 
