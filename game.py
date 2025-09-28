@@ -98,6 +98,15 @@ while running:
     screen.fill(BLACK) 
 
     #grid lines
+    for i in range(0, HEIGHT, 50):
+        pygame.draw.rect(screen, DARKBLUE, (0, i, WIDTH, 1))
+    for i in range(25, HEIGHT, 50):
+        pygame.draw.rect(screen, DARKERBLUE, (0, i, WIDTH, 1))
+
+    for i in range(50, WIDTH, 50):
+        pygame.draw.rect(screen, DARKBLUE, (i, 0, 1, HEIGHT))
+    for i in range(25, WIDTH, 50):
+        pygame.draw.rect(screen, DARKERBLUE, (i, 0, 1, HEIGHT))
 
     #draw enemies
     for enemy in enemies:
