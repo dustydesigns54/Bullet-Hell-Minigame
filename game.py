@@ -67,8 +67,21 @@ while running:
     
     aim_direction = player.get_aim_direction(joystick)
     if aim_direction is not None and shoot_timer <= 0:
-        bullet = Bullet(player, aim_direction)
-        bullets.append(bullet)
+        if player.level == 1 or player.level == 2:
+            bullet = Bullet(player, aim_direction)
+            bullets.append(bullet)
+        elif player.level == 3 or player.level == 4:
+            bullet = Bullet(player, aim_direction - 0.08)
+            bullets.append(bullet)
+            bullet = Bullet(player, aim_direction + 0.08)
+            bullets.append(bullet)
+        elif player.level >= 5:
+            bullet = Bullet(player, aim_direction - 0.1)
+            bullets.append(bullet)
+            bullet = Bullet(player, aim_direction + 0.1)
+            bullets.append(bullet)
+            bullet = Bullet(player, aim_direction)
+            bullets.append(bullet)
         shoot_timer = bullet_delay
 
     # Handle enemies
@@ -126,8 +139,8 @@ while running:
 
     # Draw enemies
     for enemy in enemies:
-        enemy.draw(screen)
         enemy.draw_health_bar(screen)
+        enemy.draw(screen)
 
     # Draw player
     player.draw(screen)
