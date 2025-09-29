@@ -10,6 +10,7 @@ class Player:
         self.speed = 8
         self.x = x
         self.y = y
+        self.start_health = 100
         self.health = 100
         self.level = 1
 
@@ -80,3 +81,7 @@ class Player:
                 return atan2(dy, dx)
 
         return None
+    
+    def draw_health_bar(self, screen):
+        pygame.draw.rect(screen, RED, (self.x - (self.radius * 2), self.y - (self.radius * 2), (self.radius * 4), 3))
+        pygame.draw.rect(screen, GREEN, (self.x - (self.radius * 2), self.y - (self.radius * 2), ((self.radius * 4) * (self.health / 100)), 3))

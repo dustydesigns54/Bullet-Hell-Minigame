@@ -12,12 +12,12 @@ def spawn_enemy():
 
 pygame.init()
 
-#screen and colors
+# Screen and colors
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Ball Game")
 font = pygame.font.SysFont(None, 30)
 
-#entities
+# Entities
 player = Player(WIDTH / 2, HEIGHT / 2)
 score = 0
 og_score = 0
@@ -31,7 +31,7 @@ enemies = []
 enemy_spawn_timer = 0
 enemy_spawn_delay = 175
 
-#settup
+# Settup
 last_tick = pygame.time.get_ticks()
 clock = pygame.time.Clock()
 
@@ -46,22 +46,22 @@ if pygame.joystick.get_count() > 0:
 else:
     print("No controller detected. Using keyboard (WASD) and mouse controls.")
 
-#game loop
+# Game loop
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:  
             running = False
     
-    #time keeping
+    # Time keeping
     now = pygame.time.get_ticks()
     dt_ms = now - last_tick
     last_tick = now
 
-    #movement
+    # Movement
     player.handle_movement(joystick)
 
-    #create bullets
+    # Create bullets
     if shoot_timer > 0:
         shoot_timer -= 1  
     
@@ -71,44 +71,49 @@ while running:
         bullets.append(bullet)
         shoot_timer = bullet_delay
 
-    #handle enemies
+    # Handle enemies
     for enemy in enemies:
         enemy.update(player)
         if enemy.check_collision_with_player(player):
-            player.alive = False
+            enemies.remove(enemy)
+            player.health -= enemy.dmg
+            if player.health <= 0:
+                player.alive = False
     
-    #handle bullets
+    # Handle bullets
     for bullet in bullets:
         for enemy in enemies:
             if enemy.check_collision_with_bullet(bullet):
                 bullets.remove(bullet)
-                enemies.remove(enemy) # replace with kill enemy
-                score += enemy.score_value
+                enemy.health -= 25
+                if enemy.health <= 0:
+                    enemies.remove(enemy)
+                    score += enemy.score_value
                 break
-        #remove bullets off screen
+        # Remove bullets off screen
         if bullet.x > WIDTH + 20 or bullet.x < -20 or bullet.y > HEIGHT + 20 or bullet.y < -20:
             bullets.remove(bullet)
         bullet.update()
 
-    #create enemies
+    # Create enemies
     enemy_spawn_timer += 1
     if enemy_spawn_timer >= enemy_spawn_delay:
         for i in range(0, player.level):
             spawn_enemy()
         enemy_spawn_timer = 0
 
-    #handle level up (increase difficulty, increase weapon power)
+    # Handle level up (increase difficulty, increase weapon power)
     if score > og_score + level_up:
         player.level += 1
         og_score += level_up + 1
         level_up += 3000
         enemy_spawn_delay -= enemy_spawn_delay * 0.10
-        bullet_delay -= bullet_delay * 0.10
+        bullet_delay -= bullet_delay * 0.20
 
-    #draw screen
+    # Draw screen
     screen.fill(BLACK) 
 
-    #grid lines
+    # Grid lines
     for i in range(0, HEIGHT, 50):
         pygame.draw.rect(screen, DARKBLUE, (0, i, WIDTH, 1))
     for i in range(25, HEIGHT, 50):
@@ -119,28 +124,30 @@ while running:
     for i in range(25, WIDTH, 50):
         pygame.draw.rect(screen, DARKERBLUE, (i, 0, 1, HEIGHT))
 
-    #draw enemies
+    # Draw enemies
     for enemy in enemies:
         enemy.draw(screen)
+        enemy.draw_health_bar(screen)
 
-    #draw player
+    # Draw player
     player.draw(screen)
+    player.draw_health_bar(screen)
 
-    #draw bullets
+    # Draw bullets
     for bullet in bullets:
         bullet.draw(screen)
     
-    #draw ui elements (score, level, time)
+    # Draw ui elements (score, level, time)
     score_display = font.render(f"Score: {score}", True, (255, 255, 255))
     screen.blit(score_display, (25, 25))
     level_display = font.render(f"Level: {player.level}", True, (255, 255, 255))
     screen.blit(level_display, (25, 50))
 
-    #print death screen
+    # Print death screen
     if not player.alive:
         break
 
-    #update screen and advance time
+    # Update screen and advance time
     pygame.display.flip()
     clock.tick(60)
 

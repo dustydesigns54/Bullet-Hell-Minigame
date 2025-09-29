@@ -10,6 +10,7 @@ class Enemy:
         self.radius = 15
         self.score_value = 200
         self.dmg = 10
+        self.start_health = 50
         self.health = 50
         self.speed = 2.5
 
@@ -19,7 +20,8 @@ class Enemy:
                 self.radius = 10
                 self.score_value = 250
                 self.dmg = 5
-                self.health = 50
+                self.start_health = 25
+                self.health = 25
                 self.speed = 5
         elif player_level >= 5:
             if random.randint(0, 3) == 0:
@@ -27,13 +29,15 @@ class Enemy:
                 self.radius = 10
                 self.score_value = 250
                 self.dmg = 5
-                self.health = 50
+                self.start_health = 25
+                self.health = 25
                 self.speed = 5
             elif random.randint(0, 2) == 0:
                 self.color = PURPLE
                 self.radius = 20
                 self.score_value = 300
                 self.dmg = 20
+                self.start_health = 200
                 self.health = 200
                 self.speed = 1.5
     
@@ -56,3 +60,7 @@ class Enemy:
     def check_collision_with_bullet(self, bullet):
         distance = sqrt((self.x - bullet.x)**2 + (self.y - bullet.y)**2)
         return distance < self.radius + bullet.radius
+    
+    def draw_health_bar(self, screen):
+        pygame.draw.rect(screen, RED, (self.x - (self.radius * 2), self.y - (self.radius * 2), (self.radius * 4), 3))
+        pygame.draw.rect(screen, GREEN, (self.x - (self.radius * 2), self.y - (self.radius * 2), ((self.radius * 4) * (self.health / self.start_health)), 3))
