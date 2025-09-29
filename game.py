@@ -104,8 +104,11 @@ while running:
                     score += enemy.score_value
                 break
         # Remove bullets off screen
-        if bullet.x > WIDTH + 20 or bullet.x < -20 or bullet.y > HEIGHT + 20 or bullet.y < -20:
-            bullets.remove(bullet)
+        if bullet.x > WIDTH or bullet.x < 0 or bullet.y > HEIGHT or bullet.y < 0:
+            try:
+                bullets.remove(bullet)
+            except ValueError:
+                print("Tried to remove bullet that was already removed.")
         bullet.update()
 
     # Create enemies

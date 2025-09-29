@@ -12,7 +12,7 @@ class Player:
         self.y = y
         self.start_health = 100
         self.health = 100
-        self.level = 1
+        self.level = 5
 
     def draw(self, screen):
         pygame.draw.circle(screen, GREEN, (int(self.x), int(self.y)), self.radius)
