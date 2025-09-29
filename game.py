@@ -29,7 +29,7 @@ shoot_timer = 0
 
 enemies = []
 enemy_spawn_timer = 0
-enemy_spawn_delay = 250
+enemy_spawn_delay = 175
 
 #settup
 last_tick = pygame.time.get_ticks()
