@@ -38,9 +38,13 @@ clock = pygame.time.Clock()
 joystick = None
 pygame.joystick.init()
 
+# Initialize controller if available
 if pygame.joystick.get_count() > 0:
     joystick = pygame.joystick.Joystick(0)
     joystick.init()
+    print(f"Controller detected: {joystick.get_name()}")
+else:
+    print("No controller detected. Using keyboard (WASD) and mouse controls.")
 
 #game loop
 running = True
