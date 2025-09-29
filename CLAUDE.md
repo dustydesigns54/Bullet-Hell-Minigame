@@ -53,7 +53,7 @@ python3 game.py
 python3 ball_game.py
 
 # Debug controller input
-python3 controller.py
+python3 debug/controller_util.py
 ```
 
 ### Dependencies
