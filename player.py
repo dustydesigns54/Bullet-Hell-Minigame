@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-from math import atan2
+from math import atan2, sqrt
 
 class Player:
     def __init__(self, x, y):
@@ -18,15 +18,28 @@ class Player:
 
     def handle_movement(self, joystick):
         if self.alive:
-            left_x = joystick.get_axis(0)
-            left_y = joystick.get_axis(1)
-            
-            # Apply deadzone
-            deadzone = 0.15
-            if abs(left_x) > deadzone:
-                self.x += left_x * self.speed
-            if abs(left_y) > deadzone:
-                self.y += left_y * self.speed
+            if joystick:
+                # Controller input
+                left_x = joystick.get_axis(0)
+                left_y = joystick.get_axis(1)
+
+                # Apply deadzone
+                deadzone = 0.15
+                if abs(left_x) > deadzone:
+                    self.x += left_x * self.speed
+                if abs(left_y) > deadzone:
+                    self.y += left_y * self.speed
+            else:
+                # Keyboard input (WASD)
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_a]:
+                    self.x -= self.speed
+                if keys[pygame.K_d]:
+                    self.x += self.speed
+                if keys[pygame.K_w]:
+                    self.y -= self.speed
+                if keys[pygame.K_s]:
+                    self.y += self.speed
 
         #set border restrictions
         if self.x - self.radius < 0:
@@ -40,8 +53,7 @@ class Player:
     
     def get_aim_direction(self, joystick):
         if joystick:
-            # Get right stick input (axis 2 = X, axis 3 = Y on most Xbox controllers)
-            # Note: Some controllers may use different axis numbers
+            # Controller input - Get right stick input
             try:
                 right_x = joystick.get_axis(2)  # Right stick X
                 right_y = joystick.get_axis(3)  # Right stick Y
@@ -49,9 +61,22 @@ class Player:
                 # Fallback for controllers with different axis mapping
                 right_x = joystick.get_axis(4) if joystick.get_numaxes() > 4 else 0
                 right_y = joystick.get_axis(5) if joystick.get_numaxes() > 5 else 0
-            
+
             # Apply deadzone
             deadzone = 0.3
             if abs(right_x) > deadzone or abs(right_y) > deadzone:
                 return atan2(right_y, right_x)
+        else:
+            # Mouse input - aim towards mouse cursor
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+
+            # Calculate direction from player to mouse
+            dx = mouse_x - self.x
+            dy = mouse_y - self.y
+
+            # Only aim if mouse is far enough from player (acts like deadzone)
+            distance = sqrt(dx*dx + dy*dy)
+            if distance > 30:  # Minimum distance threshold
+                return atan2(dy, dx)
+
         return None
