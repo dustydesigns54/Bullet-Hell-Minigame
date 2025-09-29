@@ -13,7 +13,7 @@ class Enemy:
         self.health = 50
         self.speed = 2.5
 
-        if player_level == 2:
+        if player_level == 3 or player_level == 4:
             if random.randint(0, 2) == 0:
                 self.color = ORANGE
                 self.radius = 10
@@ -21,14 +21,21 @@ class Enemy:
                 self.dmg = 5
                 self.health = 50
                 self.speed = 5
-        elif player_level >= 3:
-            if random.randint(0, 1) == 0:
+        elif player_level >= 5:
+            if random.randint(0, 3) == 0:
                 self.color = ORANGE
                 self.radius = 10
                 self.score_value = 250
                 self.dmg = 5
                 self.health = 50
                 self.speed = 5
+            elif random.randint(0, 2) == 0:
+                self.color = PURPLE
+                self.radius = 20
+                self.score_value = 300
+                self.dmg = 20
+                self.health = 200
+                self.speed = 1.5
     
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
