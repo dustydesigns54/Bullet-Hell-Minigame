@@ -91,7 +91,7 @@ while running:
     for enemy in enemies:
         enemy.update(player)
         if enemy.check_collision_with_player(player):
-            spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3)
+            spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3, 45)
             enemies.remove(enemy)
             player.health -= enemy.dmg
             if player.health <= 0:
@@ -105,7 +105,7 @@ while running:
                 bullets.remove(bullet)
                 enemy.health -= 25
                 if enemy.health <= 0:
-                    spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3)
+                    spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3, 45)
                     enemies.remove(enemy)
                     score += enemy.score_value
                 break
@@ -154,13 +154,13 @@ while running:
 
     # Draw and manage particles/explosions
     for particles in explosions:
-    # update & draw particles
+    # Update & draw particles
         for p in particles:
             p.update()
             p.draw(screen)
             if not p.alive():
                 particles.remove(p)
-        # remove finished explosion groups
+        # Remove finished explosion groups
         if not particles:
             explosions.remove(particles)
     
