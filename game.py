@@ -24,7 +24,7 @@ og_score = 0
 level_up = 1999
 
 bullets = []
-bullet_delay = 10
+bullet_delay = 15
 shoot_timer = 0
 
 enemies = []
@@ -68,19 +68,19 @@ while running:
     aim_direction = player.get_aim_direction(joystick)
     if aim_direction is not None and shoot_timer <= 0:
         if player.level == 1 or player.level == 2:
-            bullet = Bullet(player, aim_direction)
+            bullet = Bullet(player, aim_direction, 14 + player.level)
             bullets.append(bullet)
         elif player.level == 3 or player.level == 4:
-            bullet = Bullet(player, aim_direction - 0.08)
+            bullet = Bullet(player, aim_direction - 0.06, 14 + player.level)
             bullets.append(bullet)
-            bullet = Bullet(player, aim_direction + 0.08)
+            bullet = Bullet(player, aim_direction + 0.06, 14 + player.level)
             bullets.append(bullet)
         elif player.level >= 5:
-            bullet = Bullet(player, aim_direction - 0.1)
+            bullet = Bullet(player, aim_direction - 0.1, 14 + player.level)
             bullets.append(bullet)
-            bullet = Bullet(player, aim_direction + 0.1)
+            bullet = Bullet(player, aim_direction + 0.1, 14 + player.level)
             bullets.append(bullet)
-            bullet = Bullet(player, aim_direction)
+            bullet = Bullet(player, aim_direction, 14 + player.level)
             bullets.append(bullet)
         shoot_timer = bullet_delay
 
