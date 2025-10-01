@@ -3,11 +3,11 @@ from constants import *
 from math import cos, sin
 
 class Bullet:
-    def __init__(self, player, angle):
+    def __init__(self, player, angle, speed):
         self.x = player.x
         self.y = player.y
         self.color = YELLOW
-        self.speed = 20
+        self.speed = speed
         self.radius = 5
         self.angle = angle
     
