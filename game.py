@@ -3,6 +3,7 @@ from constants import *
 from bullet import Bullet
 from player import Player
 from enemy import Enemy
+from particle import Particle, spawn_explosion
 
 def spawn_enemy():
     x_spawn_points = [0, WIDTH, random.randint(0, WIDTH), random.randint(0, WIDTH)]
@@ -26,6 +27,8 @@ level_up = 1999
 bullets = []
 bullet_delay = 15
 shoot_timer = 0
+
+explosions = []
 
 enemies = []
 enemy_spawn_timer = 0
@@ -88,6 +91,7 @@ while running:
     for enemy in enemies:
         enemy.update(player)
         if enemy.check_collision_with_player(player):
+            spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3)
             enemies.remove(enemy)
             player.health -= enemy.dmg
             if player.health <= 0:
@@ -97,15 +101,18 @@ while running:
     for bullet in bullets:
         for enemy in enemies:
             if enemy.check_collision_with_bullet(bullet):
+                spawn_explosion(explosions, bullet.x, bullet.y, 3, bullet.color, 2.5)
                 bullets.remove(bullet)
                 enemy.health -= 25
                 if enemy.health <= 0:
+                    spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3)
                     enemies.remove(enemy)
                     score += enemy.score_value
                 break
         # Remove bullets off screen
         if bullet.x > WIDTH or bullet.x < 0 or bullet.y > HEIGHT or bullet.y < 0:
             try:
+                spawn_explosion(explosions, bullet.x, bullet.y, 3, bullet.color, 2.5)
                 bullets.remove(bullet)
             except ValueError:
                 print("Tried to remove bullet that was already removed.")
@@ -145,6 +152,18 @@ while running:
         enemy.draw_health_bar(screen)
         enemy.draw(screen)
 
+    # Draw and manage particles/explosions
+    for particles in explosions:
+    # update & draw particles
+        for p in particles:
+            p.update()
+            p.draw(screen)
+            if not p.alive():
+                particles.remove(p)
+        # remove finished explosion groups
+        if not particles:
+            explosions.remove(particles)
+    
     # Draw player
     player.draw(screen)
     player.draw_health_bar(screen)
