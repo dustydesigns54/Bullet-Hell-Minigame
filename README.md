@@ -80,6 +80,7 @@ python3 debug/controller_util.py
 ├── player.py        # Player entity class
 ├── enemy.py         # Enemy entity classes
 ├── bullet.py        # Bullet projectile class
+├── particle.py      # Particle entity class
 ├── constants.py     # Color definitions and screen dimensions
 └── debug/controller_util.py    # Controller input debugging utility
 ```
