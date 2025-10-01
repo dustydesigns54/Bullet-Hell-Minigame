@@ -24,7 +24,7 @@ class Enemy:
                 self.health = 25
                 self.speed = 5
         elif player_level >= 5:
-            if random.randint(0, 3) == 0:
+            if random.randint(0, 4) == 0:
                 self.color = ORANGE
                 self.radius = 10
                 self.score_value = 250
@@ -32,12 +32,12 @@ class Enemy:
                 self.start_health = 25
                 self.health = 25
                 self.speed = 5
-            elif random.randint(0, 2) == 0:
+            elif random.randint(0, 3) == 0:
                 self.color = PURPLE
                 self.radius = 20
                 self.score_value = 300
                 self.dmg = 20
-                self.start_health = 200
+                self.start_health = 300
                 self.health = 200
                 self.speed = 1.5
     

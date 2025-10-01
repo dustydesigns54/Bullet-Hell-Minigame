@@ -93,6 +93,6 @@ class Player:
         self.level += 1
         self.start_health += 10
         self.health = self.start_health
-        self.radius += 1.25
-        self.speed += 0.5
+        self.radius += 1
+        self.speed += 0.35
         spawn_explosion(explosions, self.x, self.y, 10, self.color, 15, 50)
