@@ -12,7 +12,7 @@ class Player:
         self.y = y
         self.start_health = 100
         self.health = 100
-        self.level = 5
+        self.level = 1
 
     def draw(self, screen):
         pygame.draw.circle(screen, GREEN, (int(self.x), int(self.y)), self.radius)
@@ -83,5 +83,6 @@ class Player:
         return None
     
     def draw_health_bar(self, screen):
-        pygame.draw.rect(screen, RED, (self.x - (self.radius * 2), self.y - (self.radius * 2), (self.radius * 4), 3))
-        pygame.draw.rect(screen, GREEN, (self.x - (self.radius * 2), self.y - (self.radius * 2), ((self.radius * 4) * (self.health / 100)), 3))
+        if self.health != self.start_health:
+            pygame.draw.rect(screen, RED, (self.x - (self.radius * 2), self.y - (self.radius * 2), (self.radius * 4), 3))
+            pygame.draw.rect(screen, GREEN, (self.x - (self.radius * 2), self.y - (self.radius * 2), ((self.radius * 4) * (self.health / 100)), 3))
