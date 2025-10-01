@@ -3,7 +3,7 @@ from constants import *
 from bullet import Bullet
 from player import Player
 from enemy import Enemy
-from particle import Particle, spawn_explosion
+from particle import spawn_explosion
 
 def spawn_enemy():
     x_spawn_points = [0, WIDTH, random.randint(0, WIDTH), random.randint(0, WIDTH)]
@@ -127,7 +127,7 @@ while running:
 
     # Handle level up (increase difficulty, increase weapon power)
     if score > og_score + level_up:
-        player.level += 1
+        player.level_up(explosions)
         og_score += level_up + 1
         level_up += 3000
         enemy_spawn_delay -= enemy_spawn_delay * 0.10

@@ -1,12 +1,14 @@
 import pygame
 from constants import *
 from math import atan2, sqrt
+from particle import spawn_explosion
 
 class Player:
     def __init__(self, x, y):
         self.alive = True
         self.death_time = None
         self.radius = 10
+        self.color = GREEN
         self.speed = 8
         self.x = x
         self.y = y
@@ -15,7 +17,7 @@ class Player:
         self.level = 1
 
     def draw(self, screen):
-        pygame.draw.circle(screen, GREEN, (int(self.x), int(self.y)), self.radius)
+        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
 
     def handle_movement(self, joystick):
         if self.alive:
@@ -85,4 +87,12 @@ class Player:
     def draw_health_bar(self, screen):
         if self.health != self.start_health:
             pygame.draw.rect(screen, RED, (self.x - (self.radius * 2), self.y - (self.radius * 2), (self.radius * 4), 3))
-            pygame.draw.rect(screen, GREEN, (self.x - (self.radius * 2), self.y - (self.radius * 2), ((self.radius * 4) * (self.health / 100)), 3))
+            pygame.draw.rect(screen, GREEN, (self.x - (self.radius * 2), self.y - (self.radius * 2), ((self.radius * 4) * (self.health / self.start_health)), 3))
+
+    def level_up(self, explosions):
+        self.level += 1
+        self.start_health += 10
+        self.health = self.start_health
+        self.radius += 1.25
+        self.speed += 0.5
+        spawn_explosion(explosions, self.x, self.y, 10, self.color, 15, 50)
