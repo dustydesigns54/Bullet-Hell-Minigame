@@ -25,7 +25,7 @@ og_score = 0
 level_up = 1999
 
 bullets = []
-bullet_delay = 15
+bullet_delay = 12
 shoot_timer = 0
 
 explosions = []
@@ -37,6 +37,7 @@ enemy_spawn_delay = 175
 # Settup
 last_tick = pygame.time.get_ticks()
 clock = pygame.time.Clock()
+alternator = 0
 
 joystick = None
 pygame.joystick.init()
@@ -78,13 +79,28 @@ while running:
             bullets.append(bullet)
             bullet = Bullet(player, aim_direction + 0.06, 14 + player.level)
             bullets.append(bullet)
-        elif player.level >= 5:
-            bullet = Bullet(player, aim_direction - 0.1, 14 + player.level)
-            bullets.append(bullet)
-            bullet = Bullet(player, aim_direction + 0.1, 14 + player.level)
-            bullets.append(bullet)
-            bullet = Bullet(player, aim_direction, 14 + player.level)
-            bullets.append(bullet)
+        elif player.level == 5 or player.level == 6 or player.level == 7:
+            if alternator % 2 == 0:
+                bullet = Bullet(player, aim_direction - 0.2, 14 + player.level)
+                bullets.append(bullet)
+                bullet = Bullet(player, aim_direction + 0.2, 14 + player.level)
+                bullets.append(bullet)
+                bullet = Bullet(player, aim_direction, 14 + player.level)
+                bullets.append(bullet)
+            else:
+                bullet = Bullet(player, aim_direction - 0.06, 14 + player.level)
+                bullets.append(bullet)
+                bullet = Bullet(player, aim_direction + 0.06, 14 + player.level)
+                bullets.append(bullet)
+            alternator += 1
+        else: 
+                bullet = Bullet(player, aim_direction - 0.1, 14 + player.level)
+                bullets.append(bullet)
+                bullet = Bullet(player, aim_direction + 0.1, 14 + player.level)
+                bullets.append(bullet)
+                bullet = Bullet(player, aim_direction, 14 + player.level)
+                bullets.append(bullet)
+
         shoot_timer = bullet_delay
 
     # Handle enemies
