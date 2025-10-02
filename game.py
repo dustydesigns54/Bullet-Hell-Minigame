@@ -130,8 +130,8 @@ while running:
         player.level_up(explosions)
         og_score += level_up + 1
         level_up += 3000
-        enemy_spawn_delay -= enemy_spawn_delay * 0.10
-        bullet_delay -= bullet_delay * 0.20
+        enemy_spawn_delay -= enemy_spawn_delay * 0.09
+        bullet_delay -= bullet_delay * 0.13
 
     # Draw screen
     screen.fill(BLACK) 
