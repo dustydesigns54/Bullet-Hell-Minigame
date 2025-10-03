@@ -34,12 +34,12 @@ class Enemy:
 
         def make_mini_boss(self):
             self.color = WHITE
-            self.radius = 30
+            self.radius = 32
             self.score_value = 1500
-            self.dmg = 75
-            self.start_health = 1200
-            self. health = 1200
-            self.speed = 0.33
+            self.dmg = 85
+            self.start_health = 1350
+            self. health = 1350
+            self.speed = 0.4
 
         if player_level == 3 or player_level == 4:
             if random.randint(0, 3) == 0:
@@ -50,7 +50,7 @@ class Enemy:
             elif random.randint(0, 4) == 0:
                 make_tank(self)
         elif player_level >= 8:
-            if random.randint(0, 100) == 0:
+            if random.randint(0, 115) == 0:
                 make_mini_boss(self)
             elif random.randint(0, 4) == 0:
                 make_mini(self)
