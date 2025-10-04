@@ -66,6 +66,7 @@ python3 debug/controller_util.py
 - **Red enemies**: Basic type with moderate speed and health
 - **Orange enemies**: Fast enemies (unlock at level 3+) with less health but higher speed
 - **Purple enemies**: Tank enemies (unlock at level 5+) with high health and damage but slower movement
+- **White enemies**: Miniboss enemies (unlock at level 8+) with higher health and damage but very slow movement
 
 ### Progression System
 - Level up based on score thresholds
