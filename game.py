@@ -1,4 +1,4 @@
-import pygame, sys, math, random
+import pygame, sys, random
 from constants import *
 from bullet import Bullet
 from player import Player
