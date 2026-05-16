@@ -5,17 +5,27 @@ from particle import spawn_explosion
 
 class Player:
     def __init__(self, x, y):
+        self.level = 1
+        self.health_level = 1
+        self.weapon_level = 1
+        self.weapon_fire_rate_level = 1
+        self.weapon_bullet_speed = 1
+        self.speed_level = 1
+
+        self.start_health = 100
+        self.health = 100
+        self.health_upgrade_strength = 100
+        self.weapon_fire_rate_level_upgrade_strength = 1
+        self.weapon_bullet_speed_upgrade_strength = 1
+        self.speed = 4
+        self.speed_upgrade_strength = 3
+
         self.alive = True
         self.death_time = None
         self.radius = 15
         self.color = GREEN
-        self.speed = 8
         self.x = x
         self.y = y
-        self.start_health = 100
-        self.health = 100
-        self.level = 1
-        self.weapon_level = 1
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
@@ -92,8 +102,18 @@ class Player:
 
     def level_up(self, explosions):
         self.level += 1
-        self.weapon_level += 1
-        self.start_health += 10
-        self.health = self.start_health
-        self.speed += 0.3
         spawn_explosion(explosions, self.x, self.y, 10, self.color, 15, 50)
+
+    def upgrade_health(self):
+        self.health_level += 1
+        self.start_health += self.health_upgrade_strength
+        self.health = self.start_health
+
+    def upgrade_weapon(self):
+        self.weapon_level += 1
+        self.weapon_fire_rate_level += self.weapon_fire_rate_level_upgrade_strength
+        self.weapon_bullet_speed += self.weapon_bullet_speed_upgrade_strength
+
+    def upgrade_speed(self):
+        self.speed_level += 1
+        self.speed += self.speed_upgrade_strength

@@ -4,7 +4,7 @@ from bullet import Bullet
 from player import Player
 from enemy import Enemy
 from particle import spawn_explosion
-from user_interface import main_menu, pause_menu, draw_stat_panel
+from user_interface import main_menu, pause_menu, draw_stat_panel, upgrade_selection_menu
 
 def run_game(screen, clock, joystick):
     panel_font = pygame.font.SysFont(None, 24)
@@ -35,6 +35,7 @@ def run_game(screen, clock, joystick):
         enemies.append(Enemy(x_spawns[choice], y_spawns[choice], player.level))
 
     paused = False
+    upgrade_delay = 0
 
     while True:
         for event in pygame.event.get():
@@ -54,24 +55,24 @@ def run_game(screen, clock, joystick):
 
         aim_direction = player.get_aim_direction(joystick)
         if aim_direction is not None and shoot_timer <= 0:
-            if player.weapon_level == 1 or player.weapon_level == 2:
-                bullets.append(Bullet(player, aim_direction, 14 + player.weapon_level))
-            elif player.weapon_level == 3 or player.weapon_level == 4:
-                bullets.append(Bullet(player, aim_direction - 0.06, 14 + player.weapon_level))
-                bullets.append(Bullet(player, aim_direction + 0.06, 14 + player.weapon_level))
-            elif player.weapon_level <= 7:
+            if player.weapon_level == 1:
+                bullets.append(Bullet(player, aim_direction, 15 + player.weapon_bullet_speed))
+            elif player.weapon_level == 2:
+                bullets.append(Bullet(player, aim_direction - 0.06, 15 + player.weapon_bullet_speed))
+                bullets.append(Bullet(player, aim_direction + 0.06, 15 + player.weapon_bullet_speed))
+            elif player.weapon_level == 3:
                 if alternator % 2 == 0:
-                    bullets.append(Bullet(player, aim_direction - 0.2, 14 + player.weapon_level))
-                    bullets.append(Bullet(player, aim_direction + 0.2, 14 + player.weapon_level))
-                    bullets.append(Bullet(player, aim_direction, 14 + player.weapon_level))
+                    bullets.append(Bullet(player, aim_direction - 0.2, 15 + player.weapon_bullet_speed))
+                    bullets.append(Bullet(player, aim_direction + 0.2, 15 + player.weapon_bullet_speed))
+                    bullets.append(Bullet(player, aim_direction, 15 + player.weapon_bullet_speed))
                 else:
-                    bullets.append(Bullet(player, aim_direction - 0.06, 14 + player.weapon_level))
-                    bullets.append(Bullet(player, aim_direction + 0.06, 14 + player.weapon_level))
+                    bullets.append(Bullet(player, aim_direction - 0.06, 15 + player.weapon_bullet_speed))
+                    bullets.append(Bullet(player, aim_direction + 0.06, 15 + player.weapon_bullet_speed))
                 alternator += 1
             else:
-                bullets.append(Bullet(player, aim_direction - 0.1, 14 + player.weapon_level))
-                bullets.append(Bullet(player, aim_direction + 0.1, 14 + player.weapon_level))
-                bullets.append(Bullet(player, aim_direction, 14 + player.weapon_level))
+                bullets.append(Bullet(player, aim_direction - 0.1, 15 + player.weapon_bullet_speed))
+                bullets.append(Bullet(player, aim_direction + 0.1, 15 + player.weapon_bullet_speed))
+                bullets.append(Bullet(player, aim_direction, 15 + player.weapon_bullet_speed))
             shoot_timer = bullet_delay
 
         for enemy in enemies:
@@ -105,21 +106,22 @@ def run_game(screen, clock, joystick):
             bullet.update()
 
         enemy_spawn_timer += 1
-        if enemy_spawn_timer >= enemy_spawn_delay:
-            for _ in range(player.level):
-                spawn_enemy()
-            enemy_spawn_timer = 0
+        if upgrade_delay >= 0:
+            if enemy_spawn_timer >= enemy_spawn_delay:
+                for _ in range(player.level):
+                    spawn_enemy()
+                enemy_spawn_timer = 0
 
         if score > og_score + level_up:
             player.level_up(explosions)
-            og_score += level_up + 1
-            level_up += 3000
-            enemy_spawn_delay -= enemy_spawn_delay * 0.09
-            bullet_delay -= bullet_delay * 0.13
             for enemy in enemies:
                 spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3, 45)
             enemies.clear()
             bullets.clear()
+            og_score += level_up + 1
+            level_up += 3000
+            enemy_spawn_delay -= enemy_spawn_delay * 0.09
+            upgrade_delay = 60
 
         screen.fill(BLACK)
 
@@ -160,11 +162,18 @@ def run_game(screen, clock, joystick):
 
         player_stats = [
             ("Player", f"Lv {player.level}"),
-            ("Weapon", f"Lv {player.level}"),
-            ("Speed",  f"{player.speed:.1f}"),
+            ("Health", f"Lv {player.health_level}"),
+            ("Weapon", f"Lv {player.weapon_level}"),
+            ("Speed",  f"Lv {player.speed_level}"),
             ("Score",  str(score)),
         ]
         draw_stat_panel(screen, panel_font, "PLAYER", player_stats, 95, 20)
+
+        actual_stats = [
+            ("HP", f"{player.health} / {player.start_health}"),
+            ("Speed", str(player.speed)),
+        ]
+        draw_stat_panel(screen, panel_font, "STATS", actual_stats, 95, 202)
 
         wave_in = max(0, (enemy_spawn_delay - enemy_spawn_timer) / 60)
         enemy_stats = [
@@ -197,6 +206,18 @@ def run_game(screen, clock, joystick):
             result = pause_menu(screen, clock, joystick, score)
             if result in ("menu", "quit"):
                 return result, score
+
+        if upgrade_delay > 0:
+            upgrade_delay -= 1
+            if upgrade_delay == 0:
+                choice = upgrade_selection_menu(screen, clock, joystick, player)
+                if choice == "health":
+                    player.upgrade_health()
+                elif choice == "weapon":
+                    player.upgrade_weapon()
+                    bullet_delay = max(3, bullet_delay - 1)
+                elif choice == "speed":
+                    player.upgrade_speed()
 
         pygame.display.flip()
         clock.tick(60)
