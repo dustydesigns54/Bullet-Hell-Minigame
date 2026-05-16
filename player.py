@@ -7,7 +7,7 @@ class Player:
     def __init__(self, x, y):
         self.alive = True
         self.death_time = None
-        self.radius = 10
+        self.radius = 15
         self.color = GREEN
         self.speed = 8
         self.x = x
@@ -15,6 +15,7 @@ class Player:
         self.start_health = 100
         self.health = 100
         self.level = 1
+        self.weapon_level = 1
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
@@ -91,8 +92,8 @@ class Player:
 
     def level_up(self, explosions):
         self.level += 1
+        self.weapon_level += 1
         self.start_health += 10
         self.health = self.start_health
-        self.radius += 1
         self.speed += 0.3
         spawn_explosion(explosions, self.x, self.y, 10, self.color, 15, 50)
