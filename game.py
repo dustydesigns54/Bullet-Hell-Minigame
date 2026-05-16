@@ -2,7 +2,7 @@ import pygame, sys, random
 from constants import *
 from bullet import Bullet
 from player import Player
-from enemy import Enemy
+from enemy import Enemy, BOSS_ROUNDS
 from particle import spawn_explosion
 from user_interface import main_menu, pause_menu, draw_stat_panel, upgrade_selection_menu
 
@@ -26,13 +26,17 @@ def run_game(screen, clock, joystick):
     enemy_spawn_timer = 0
     enemy_spawn_delay = 175
 
+    force_level_up = False
+    pending_boss_spawn = False
+    ABILITY_INTERVAL = 30
+
     alternator = 0
 
-    def spawn_enemy():
+    def spawn_enemy(forced_type=None):
         x_spawns = [0, WIDTH, random.randint(0, WIDTH), random.randint(0, WIDTH)]
         y_spawns = [random.randint(0, HEIGHT), random.randint(0, HEIGHT), 0, HEIGHT]
         choice = random.randint(0, 3)
-        enemies.append(Enemy(x_spawns[choice], y_spawns[choice], player.level))
+        enemies.append(Enemy(x_spawns[choice], y_spawns[choice], player.level, forced_type=forced_type))
 
     paused = False
     upgrade_delay = 0
@@ -77,13 +81,29 @@ def run_game(screen, clock, joystick):
 
         for enemy in enemies:
             enemy.update(player)
-            if enemy.check_collision_with_player(player):
-                spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3, 45)
-                enemies.remove(enemy)
-                player.health -= enemy.dmg
-                damage_flash_timer = 40
-                if player.health <= 0:
-                    player.alive = False
+
+            if enemy.ability_fn is not None:
+                enemy.ability_timer += 1
+                if enemy.ability_timer >= ABILITY_INTERVAL:
+                    enemy.ability_fn(enemy, enemies, player.level)
+                    enemy.ability_timer = 0
+                # Boss: survives contact, damage gated by cooldown
+                if enemy.contact_cooldown > 0:
+                    enemy.contact_cooldown -= 1
+                elif enemy.check_collision_with_player(player):
+                    player.health -= enemy.dmg
+                    damage_flash_timer = 40
+                    enemy.contact_cooldown = 90  # 1.5 seconds at 60fps
+                    if player.health <= 0:
+                        player.alive = False
+            else:
+                if enemy.check_collision_with_player(player):
+                    spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3, 45)
+                    enemies.remove(enemy)
+                    player.health -= enemy.dmg
+                    damage_flash_timer = 40
+                    if player.health <= 0:
+                        player.alive = False
 
         for bullet in bullets:
             for enemy in enemies:
@@ -96,6 +116,8 @@ def run_game(screen, clock, joystick):
                         enemies.remove(enemy)
                         score += enemy.score_value
                         kills += 1
+                        if any(t.name == enemy.type_name for t in BOSS_ROUNDS.values()):
+                            force_level_up = True
                     break
             if bullet.x > WIDTH or bullet.x < 0 or bullet.y > HEIGHT or bullet.y < 0:
                 try:
@@ -106,22 +128,30 @@ def run_game(screen, clock, joystick):
             bullet.update()
 
         enemy_spawn_timer += 1
-        if upgrade_delay >= 0:
+        in_boss_round = (
+            player.level in BOSS_ROUNDS
+            and any(e.type_name == BOSS_ROUNDS[player.level].name for e in enemies)
+        )
+        if not in_boss_round and upgrade_delay == 0:
             if enemy_spawn_timer >= enemy_spawn_delay:
                 for _ in range(player.level):
                     spawn_enemy()
                 enemy_spawn_timer = 0
 
-        if score > og_score + level_up:
+        if score > og_score + level_up or force_level_up:
+            force_level_up = False
             player.level_up(explosions)
             for enemy in enemies:
                 spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3, 45)
             enemies.clear()
             bullets.clear()
             og_score += level_up + 1
-            level_up += 3000
+            level_up += 25
             enemy_spawn_delay -= enemy_spawn_delay * 0.09
             upgrade_delay = 60
+
+            if player.level in BOSS_ROUNDS:
+                pending_boss_spawn = True
 
         screen.fill(BLACK)
 
@@ -148,7 +178,7 @@ def run_game(screen, clock, joystick):
 
         for particles in explosions:
             for p in particles:
-                p.update()
+                p.update(WIDTH, HEIGHT)
                 p.draw(screen)
                 if not p.alive():
                     particles.remove(p)
@@ -218,6 +248,12 @@ def run_game(screen, clock, joystick):
                     bullet_delay = max(3, bullet_delay - 1)
                 elif choice == "speed":
                     player.upgrade_speed()
+                if pending_boss_spawn:
+                    boss_type = BOSS_ROUNDS[player.level]
+                    bx = random.randint(boss_type.radius, WIDTH - boss_type.radius)
+                    enemies.append(Enemy(bx, -boss_type.radius, player.level,
+                                        forced_type=boss_type.name))
+                    pending_boss_spawn = False
 
         pygame.display.flip()
         clock.tick(60)

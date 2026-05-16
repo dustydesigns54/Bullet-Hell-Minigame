@@ -1,8 +1,8 @@
 import pygame, random
-from dataclasses import dataclass
-from typing import Callable
+from dataclasses import dataclass, field
+from typing import Callable, Optional
 from constants import *
-from math import sqrt
+from math import sqrt, cos, sin, pi
 
 @dataclass
 class EnemyType:
@@ -14,26 +14,53 @@ class EnemyType:
     speed: float
     score_value: int
     weight_fn: Callable[[int], float]
+    boss_round: Optional[int] = field(default=None)
+    ability_fn: Optional[Callable] = field(default=None)
+
+def _boss_spawner_ability(host, enemies, player_level):
+    count = 5
+    for i in range(count):
+        angle = (2 * pi / count) * i
+        sx = host.x + cos(angle) * (host.radius + 25)
+        sy = host.y + sin(angle) * (host.radius + 25)
+        mini = Enemy(sx, sy, player_level, forced_type="mini")
+        mini.score_value = 0
+        enemies.append(mini)
 
 # To add a new enemy type, append one entry here — nothing else changes.
+# To add a new boss, set boss_round to the target round and define an ability_fn above.
 ENEMY_TYPES: list[EnemyType] = [
     EnemyType("standard",  RED,    15, 10,   50, 2.5,  200, lambda lvl: lvl * 3),
     EnemyType("mini",      ORANGE, 10,  5,   25, 7.5,  250, lambda lvl: max(0, (lvl - 2) * 2)),
-    EnemyType("tank",      PURPLE, 20, 20,  300, 1.5,  300, lambda lvl: max(0, (lvl - 5) * 3)),
-    EnemyType("mini_boss", WHITE,  32, 85, 1350, 0.4, 1500, lambda lvl: max(0, (lvl - 10))),
+    EnemyType("tank",      PURPLE, 20, 20,  300, 1.5,  450, lambda lvl: max(0, (lvl - 5) * 3)),
+    EnemyType("mini_boss", WHITE,  32, 85, 1350, 0.4, 3000, lambda lvl: max(0, (lvl - 10))),
+
+    # Bosses — weight_fn always 0; spawned exclusively via boss_round logic
+    EnemyType("boss_spawner", GREY, 50, 150, 25000, 0.5, 0,
+              lambda lvl: 0,
+              boss_round=10,
+              ability_fn=_boss_spawner_ability),
 ]
 
+BOSS_ROUNDS: dict[int, EnemyType] = {
+    t.boss_round: t for t in ENEMY_TYPES if t.boss_round is not None
+}
+
 class Enemy:
-    def __init__(self, x, y, player_level):
+    def __init__(self, x, y, player_level, forced_type: Optional[str] = None):
         self.x = x
         self.y = y
 
-        chosen = random.choices(
-            ENEMY_TYPES,
-            weights=[t.weight_fn(player_level) for t in ENEMY_TYPES],
-            k=1,
-        )[0]
+        if forced_type is not None:
+            chosen = next(t for t in ENEMY_TYPES if t.name == forced_type)
+        else:
+            chosen = random.choices(
+                ENEMY_TYPES,
+                weights=[t.weight_fn(player_level) for t in ENEMY_TYPES],
+                k=1,
+            )[0]
 
+        self.type_name = chosen.name
         self.color = chosen.color
         self.radius = chosen.radius
         self.dmg = chosen.dmg
@@ -41,6 +68,9 @@ class Enemy:
         self.health = chosen.health
         self.speed = chosen.speed
         self.score_value = chosen.score_value
+        self.ability_fn = chosen.ability_fn
+        self.ability_timer = 0
+        self.contact_cooldown = 0
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

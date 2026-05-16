@@ -10,12 +10,26 @@ class Particle:
         self.vy = random.uniform(-distance, distance)
         self.lifetime = random.randint(30, 50) # Frames
 
-    def update(self):
+    def update(self, width, height):
         self.x += self.vx
         self.y += self.vy
         self.lifetime -= 1
         if self.size > 0:
-            self.size -= 0.1 
+            self.size -= 0.1
+
+        if self.x - self.size < 0:
+            self.x = self.size
+            self.vx = abs(self.vx)
+        elif self.x + self.size > width:
+            self.x = width - self.size
+            self.vx = -abs(self.vx)
+
+        if self.y - self.size < 0:
+            self.y = self.size
+            self.vy = abs(self.vy)
+        elif self.y + self.size > height:
+            self.y = height - self.size
+            self.vy = -abs(self.vy)
 
     def alive(self):
         return self.lifetime > 0 and self.size > 0
