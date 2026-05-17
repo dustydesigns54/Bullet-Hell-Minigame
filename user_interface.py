@@ -85,6 +85,10 @@ def upgrade_selection_menu(screen, clock, joystick, player=None):
                 for i, rect in enumerate(rects):
                     if rect.collidepoint(mouse_pos):
                         return upgrades[i]["key"]
+            if event.type == pygame.MOUSEMOTION:
+                for i, rect in enumerate(rects):
+                    if rect.collidepoint(mouse_pos):
+                        selected = i
             if event.type == pygame.JOYBUTTONDOWN:
                 if event.button == 0:  # A / Cross — confirm
                     return upgrades[selected]["key"]
@@ -100,10 +104,6 @@ def upgrade_selection_menu(screen, clock, joystick, player=None):
             elif left_x > 0.5 or hat[0] == 1:
                 selected = (selected + 1) % len(upgrades)
                 nav_cooldown = 15
-
-        for i, rect in enumerate(rects):
-            if rect.collidepoint(mouse_pos):
-                selected = i
 
         screen.blit(snapshot, (0, 0))
         screen.blit(overlay, (0, 0))
@@ -154,11 +154,12 @@ def upgrade_selection_menu(screen, clock, joystick, player=None):
         clock.tick(60)
 
 
-def pause_menu(screen, clock, joystick, score=0):
+def pause_menu(screen, clock, joystick, score=0, show_stats=True):
     font_title = pygame.font.SysFont(None, 80)
     font_btn = pygame.font.SysFont(None, 50)
 
-    options = ["Resume", "Return to Menu"]
+    # 0=Resume, 1=Toggle Stats, 2=Return to Menu
+    NUM_OPTIONS = 3
     selected = 0
     nav_cooldown = 0
 
@@ -167,6 +168,7 @@ def pause_menu(screen, clock, joystick, score=0):
     rects = [
         pygame.Rect(btn_x, HEIGHT // 2, btn_w, btn_h),
         pygame.Rect(btn_x, HEIGHT // 2 + 80, btn_w, btn_h),
+        pygame.Rect(btn_x, HEIGHT // 2 + 160, btn_w, btn_h),
     ]
 
     snapshot = screen.copy()
@@ -179,25 +181,40 @@ def pause_menu(screen, clock, joystick, score=0):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return "quit"
+                return "quit", show_stats
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return "resume"
+                    return "resume", show_stats
                 if event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                    return "resume" if selected == 0 else "menu"
+                    if selected == 0:
+                        return "resume", show_stats
+                    elif selected == 1:
+                        show_stats = not show_stats
+                    else:
+                        return "menu", show_stats
                 if event.key == pygame.K_UP:
-                    selected = (selected - 1) % len(options)
+                    selected = (selected - 1) % NUM_OPTIONS
                 if event.key == pygame.K_DOWN:
-                    selected = (selected + 1) % len(options)
+                    selected = (selected + 1) % NUM_OPTIONS
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for i, rect in enumerate(rects):
                     if rect.collidepoint(mouse_pos):
-                        return "resume" if i == 0 else "menu"
+                        if i == 0:
+                            return "resume", show_stats
+                        elif i == 1:
+                            show_stats = not show_stats
+                        else:
+                            return "menu", show_stats
             if event.type == pygame.JOYBUTTONDOWN:
                 if event.button == 0:  # A / Cross — confirm
-                    return "resume" if selected == 0 else "menu"
+                    if selected == 0:
+                        return "resume", show_stats
+                    elif selected == 1:
+                        show_stats = not show_stats
+                    else:
+                        return "menu", show_stats
                 if event.button == 1:  # B / Circle — resume
-                    return "resume"
+                    return "resume", show_stats
 
         if nav_cooldown > 0:
             nav_cooldown -= 1
@@ -205,10 +222,10 @@ def pause_menu(screen, clock, joystick, score=0):
             left_y = joystick.get_axis(1)
             hat = joystick.get_hat(0) if joystick.get_numhats() > 0 else (0, 0)
             if left_y < -0.5 or hat[1] == 1:
-                selected = (selected - 1) % len(options)
+                selected = (selected - 1) % NUM_OPTIONS
                 nav_cooldown = 15
             elif left_y > 0.5 or hat[1] == -1:
-                selected = (selected + 1) % len(options)
+                selected = (selected + 1) % NUM_OPTIONS
                 nav_cooldown = 15
 
         for i, rect in enumerate(rects):
@@ -225,7 +242,8 @@ def pause_menu(screen, clock, joystick, score=0):
         score_surf = font_score.render(f"Score: {score}", True, WHITE)
         screen.blit(score_surf, (WIDTH // 2 - score_surf.get_width() // 2, HEIGHT // 2 - 70))
 
-        for i, (label, rect) in enumerate(zip(options, rects)):
+        labels = ["Resume", "Hide Stats" if show_stats else "Show Stats", "Return to Menu"]
+        for i, (label, rect) in enumerate(zip(labels, rects)):
             color = WHITE if i == selected else GREY
             pygame.draw.rect(screen, color, rect, 2)
             text = font_btn.render(label, True, color)

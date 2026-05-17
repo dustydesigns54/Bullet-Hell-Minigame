@@ -6,6 +6,13 @@ from enemy import Enemy, BOSS_ROUNDS
 from particle import spawn_explosion
 from user_interface import main_menu, pause_menu, draw_stat_panel, upgrade_selection_menu
 
+def fire_spread(player, aim_direction, n, spread=0.15):
+    speed = 15 + player.weapon_bullet_speed
+    return [
+        Bullet(player, aim_direction + (i - (n - 1) / 2) * spread, speed)
+        for i in range(n)
+    ]
+
 def run_game(screen, clock, joystick):
     panel_font = pygame.font.SysFont(None, 24)
     player = Player(WIDTH / 2, HEIGHT / 2)
@@ -40,6 +47,7 @@ def run_game(screen, clock, joystick):
 
     paused = False
     upgrade_delay = 0
+    show_stats = True
 
     while True:
         for event in pygame.event.get():
@@ -59,24 +67,14 @@ def run_game(screen, clock, joystick):
 
         aim_direction = player.get_aim_direction(joystick)
         if aim_direction is not None and shoot_timer <= 0:
-            if player.weapon_level == 1:
-                bullets.append(Bullet(player, aim_direction, 15 + player.weapon_bullet_speed))
-            elif player.weapon_level == 2:
-                bullets.append(Bullet(player, aim_direction - 0.06, 15 + player.weapon_bullet_speed))
-                bullets.append(Bullet(player, aim_direction + 0.06, 15 + player.weapon_bullet_speed))
-            elif player.weapon_level == 3:
-                if alternator % 2 == 0:
-                    bullets.append(Bullet(player, aim_direction - 0.2, 15 + player.weapon_bullet_speed))
-                    bullets.append(Bullet(player, aim_direction + 0.2, 15 + player.weapon_bullet_speed))
-                    bullets.append(Bullet(player, aim_direction, 15 + player.weapon_bullet_speed))
-                else:
-                    bullets.append(Bullet(player, aim_direction - 0.06, 15 + player.weapon_bullet_speed))
-                    bullets.append(Bullet(player, aim_direction + 0.06, 15 + player.weapon_bullet_speed))
-                alternator += 1
+            level = player.weapon_level
+            if level % 2 == 1:
+                bullets.extend(fire_spread(player, aim_direction, (level + 1) // 2))
             else:
-                bullets.append(Bullet(player, aim_direction - 0.1, 15 + player.weapon_bullet_speed))
-                bullets.append(Bullet(player, aim_direction + 0.1, 15 + player.weapon_bullet_speed))
-                bullets.append(Bullet(player, aim_direction, 15 + player.weapon_bullet_speed))
+                lo, hi = level // 2, level // 2 + 1
+                n = hi if alternator % 2 == 0 else lo
+                bullets.extend(fire_spread(player, aim_direction, n))
+                alternator += 1
             shoot_timer = bullet_delay
 
         for enemy in enemies:
@@ -132,21 +130,22 @@ def run_game(screen, clock, joystick):
             player.level in BOSS_ROUNDS
             and any(e.type_name == BOSS_ROUNDS[player.level].name for e in enemies)
         )
-        if not in_boss_round and upgrade_delay == 0:
+        if not in_boss_round and upgrade_delay == 0 and not force_level_up:
             if enemy_spawn_timer >= enemy_spawn_delay:
                 for _ in range(player.level):
                     spawn_enemy()
                 enemy_spawn_timer = 0
 
         if score > og_score + level_up or force_level_up:
+            was_forced = force_level_up
             force_level_up = False
             player.level_up(explosions)
             for enemy in enemies:
                 spawn_explosion(explosions, enemy.x, enemy.y, enemy.radius * 0.33, enemy.color, enemy.radius * 0.3, 45)
             enemies.clear()
             bullets.clear()
-            og_score += level_up + 1
-            level_up += 25
+            og_score = score if was_forced else og_score + level_up + 1
+            level_up += 2500
             enemy_spawn_delay -= enemy_spawn_delay * 0.09
             upgrade_delay = 60
 
@@ -190,28 +189,29 @@ def run_game(screen, clock, joystick):
         for bullet in bullets:
             bullet.draw(screen)
 
-        player_stats = [
-            ("Player", f"Lv {player.level}"),
-            ("Health", f"Lv {player.health_level}"),
-            ("Weapon", f"Lv {player.weapon_level}"),
-            ("Speed",  f"Lv {player.speed_level}"),
-            ("Score",  str(score)),
-        ]
-        draw_stat_panel(screen, panel_font, "PLAYER", player_stats, 95, 20)
+        if show_stats:
+            player_stats = [
+                ("Player", f"Lv {player.level}"),
+                ("Health", f"Lv {player.health_level}"),
+                ("Weapon", f"Lv {player.weapon_level}"),
+                ("Speed",  f"Lv {player.speed_level}"),
+                ("Score",  str(score)),
+            ]
+            draw_stat_panel(screen, panel_font, "PLAYER", player_stats, 95, 20)
 
-        actual_stats = [
-            ("HP", f"{player.health} / {player.start_health}"),
-            ("Speed", str(player.speed)),
-        ]
-        draw_stat_panel(screen, panel_font, "STATS", actual_stats, 95, 202)
+            actual_stats = [
+                ("HP", f"{player.health} / {player.start_health}"),
+                ("Speed", str(player.speed)),
+            ]
+            draw_stat_panel(screen, panel_font, "STATS", actual_stats, 95, 202)
 
-        wave_in = max(0, (enemy_spawn_delay - enemy_spawn_timer) / 60)
-        enemy_stats = [
-            ("On Screen", str(len(enemies))),
-            ("Killed",    str(kills)),
-            ("Wave In",   f"{wave_in:.1f}s"),
-        ]
-        draw_stat_panel(screen, panel_font, "ENEMIES", enemy_stats, WIDTH - 95, 20)
+            wave_in = max(0, (enemy_spawn_delay - enemy_spawn_timer) / 60)
+            enemy_stats = [
+                ("On Screen", str(len(enemies))),
+                ("Killed",    str(kills)),
+                ("Wave In",   f"{wave_in:.1f}s"),
+            ]
+            draw_stat_panel(screen, panel_font, "ENEMIES", enemy_stats, WIDTH - 95, 20)
 
         # Top health bar — spans between the two stat panels
         bar_x, bar_y, bar_w, bar_h = 200, 30, 1100, 18
@@ -233,7 +233,7 @@ def run_game(screen, clock, joystick):
 
         if paused:
             paused = False
-            result = pause_menu(screen, clock, joystick, score)
+            result, show_stats = pause_menu(screen, clock, joystick, score, show_stats)
             if result in ("menu", "quit"):
                 return result, score
 
