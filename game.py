@@ -35,7 +35,7 @@ def run_game(screen, clock, joystick):
 
     force_level_up = False
     pending_boss_spawn = False
-    ABILITY_INTERVAL = 30
+    wave_counter = 1
 
     alternator = 0
 
@@ -82,7 +82,7 @@ def run_game(screen, clock, joystick):
 
             if enemy.ability_fn is not None:
                 enemy.ability_timer += 1
-                if enemy.ability_timer >= ABILITY_INTERVAL:
+                if enemy.ability_timer >= enemy.ability_interval:
                     enemy.ability_fn(enemy, enemies, player.level)
                     enemy.ability_timer = 0
                 # Boss: survives contact, damage gated by cooldown
@@ -132,7 +132,7 @@ def run_game(screen, clock, joystick):
         )
         if not in_boss_round and upgrade_delay == 0 and not force_level_up:
             if enemy_spawn_timer >= enemy_spawn_delay:
-                for _ in range(player.level):
+                for _ in range(wave_counter):
                     spawn_enemy()
                 enemy_spawn_timer = 0
 
@@ -146,7 +146,11 @@ def run_game(screen, clock, joystick):
             bullets.clear()
             og_score = score if was_forced else og_score + level_up + 1
             level_up += 2500
-            enemy_spawn_delay -= enemy_spawn_delay * 0.09
+            if was_forced:
+                wave_counter = 1
+            else:
+                wave_counter += 1
+            enemy_spawn_delay -= enemy_spawn_delay * 0.03
             upgrade_delay = 60
 
             if player.level in BOSS_ROUNDS:

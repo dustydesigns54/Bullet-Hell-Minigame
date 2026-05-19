@@ -16,9 +16,10 @@ class EnemyType:
     weight_fn: Callable[[int], float]
     boss_round: Optional[int] = field(default=None)
     ability_fn: Optional[Callable] = field(default=None)
+    ability_interval: int = field(default=25)
 
 def _boss_spawner_ability(host, enemies, player_level):
-    count = 5
+    count = 7
     for i in range(count):
         angle = (2 * pi / count) * i
         sx = host.x + cos(angle) * (host.radius + 25)
@@ -26,6 +27,16 @@ def _boss_spawner_ability(host, enemies, player_level):
         mini = Enemy(sx, sy, player_level, forced_type="mini")
         mini.score_value = 0
         enemies.append(mini)
+
+def _boss_tank_spawner_ability(host, enemies, player_level):
+    count = 3
+    for i in range(count):
+        angle = (2 * pi / count) * i
+        sx = host.x + cos(angle) * (host.radius + 60)
+        sy = host.y + sin(angle) * (host.radius + 60)
+        mini_boss = Enemy(sx, sy, player_level, forced_type="mini_boss")
+        mini_boss.score_value = 0
+        enemies.append(mini_boss)
 
 # To add a new enemy type, append one entry here — nothing else changes.
 # To add a new boss, set boss_round to the target round and define an ability_fn above.
@@ -36,10 +47,8 @@ ENEMY_TYPES: list[EnemyType] = [
     EnemyType("mini_boss", WHITE,  32, 85, 1350, 0.4, 3000, lambda lvl: max(0, (lvl - 10))),
 
     # Bosses — weight_fn always 0; spawned exclusively via boss_round logic
-    EnemyType("boss_spawner", GREY, 50, 150, 25000, 0.5, 0,
-              lambda lvl: 0,
-              boss_round=10,
-              ability_fn=_boss_spawner_ability),
+    EnemyType("boss_spawner", GREY, 50, 150, 25000, 0.5, 0, lambda lvl: 0, boss_round=10, ability_fn=_boss_spawner_ability, ability_interval=25),
+    EnemyType("boss_tank_spawner", PURPLE, 20, 300, 40000, 3.5, 0, lambda lvl: 0, boss_round=20, ability_fn=_boss_tank_spawner_ability, ability_interval=180),
 ]
 
 BOSS_ROUNDS: dict[int, EnemyType] = {
@@ -69,6 +78,7 @@ class Enemy:
         self.speed = chosen.speed
         self.score_value = chosen.score_value
         self.ability_fn = chosen.ability_fn
+        self.ability_interval = chosen.ability_interval
         self.ability_timer = 0
         self.contact_cooldown = 0
 
