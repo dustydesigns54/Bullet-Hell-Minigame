@@ -1,3 +1,5 @@
+import math
+import os
 import pygame
 from constants import *
 from math import atan2, sqrt
@@ -26,9 +28,18 @@ class Player:
         self.color = GREEN
         self.x = x
         self.y = y
+        self.sprite = pygame.image.load(os.path.join("Sprites", "Test Ship.png")).convert_alpha()
+        self._draw_angle = 0
+        self._mask = None
+        self._rect = None
 
-    def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
+    def draw(self, screen, aim_direction=None):
+        if aim_direction is not None:
+            self._draw_angle = -math.degrees(aim_direction) - 90
+        rotated = pygame.transform.rotate(self.sprite, self._draw_angle)
+        self._rect = rotated.get_rect(center=(int(self.x), int(self.y)))
+        self._mask = pygame.mask.from_surface(rotated)
+        screen.blit(rotated, self._rect)
 
     def handle_movement(self, joystick):
         if self.alive:

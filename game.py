@@ -188,7 +188,7 @@ def run_game(screen, clock, joystick):
             if not particles:
                 explosions.remove(particles)
 
-        player.draw(screen)
+        player.draw(screen, aim_direction)
 
         for bullet in bullets:
             bullet.draw(screen)

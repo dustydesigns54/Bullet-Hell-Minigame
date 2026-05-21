@@ -4,6 +4,12 @@ from typing import Callable, Optional
 from constants import *
 from math import sqrt, cos, sin, pi
 
+def _make_circle_mask(radius):
+    size = radius * 2
+    surf = pygame.Surface((size, size), pygame.SRCALPHA)
+    pygame.draw.circle(surf, (255, 255, 255), (radius, radius), radius)
+    return pygame.mask.from_surface(surf)
+
 @dataclass
 class EnemyType:
     name: str
@@ -81,6 +87,12 @@ class Enemy:
         self.ability_interval = chosen.ability_interval
         self.ability_timer = 0
         self.contact_cooldown = 0
+        self._mask = _make_circle_mask(self.radius)
+
+    @property
+    def rect(self):
+        r = self.radius
+        return pygame.Rect(int(self.x) - r, int(self.y) - r, r * 2, r * 2)
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
@@ -95,12 +107,14 @@ class Enemy:
             self.y += (dy / distance) * self.speed
 
     def check_collision_with_player(self, player):
-        distance = sqrt((self.x - player.x)**2 + (self.y - player.y)**2)
-        return distance < self.radius + player.radius
+        if player._mask is None:
+            return sqrt((self.x - player.x)**2 + (self.y - player.y)**2) < self.radius + player.radius
+        offset = (self.rect.x - player._rect.x, self.rect.y - player._rect.y)
+        return player._mask.overlap(self._mask, offset) is not None
 
     def check_collision_with_bullet(self, bullet):
-        distance = sqrt((self.x - bullet.x)**2 + (self.y - bullet.y)**2)
-        return distance < self.radius + bullet.radius
+        offset = (bullet.rect.x - self.rect.x, bullet.rect.y - self.rect.y)
+        return self._mask.overlap(bullet._mask, offset) is not None
 
     def draw_health_bar(self, screen):
         if self.health != self.start_health:
