@@ -17,7 +17,7 @@ pygame.init()
 #screen and colors
 width, height = 1200, 700
 black, green, red = (0, 0, 0), (0, 255, 0), (255, 0, 0)
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((width, height), pygame.DOUBLEBUF, vsync=1)
 pygame.display.set_caption("Ball Game")
 font = pygame.font.SysFont(None, 48)
 
@@ -166,7 +166,7 @@ while running:
 
     #update screen and advance time
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(0)
 
 pygame.quit()
 sys.exit()

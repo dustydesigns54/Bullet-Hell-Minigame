@@ -53,7 +53,7 @@ ENEMY_TYPES: list[EnemyType] = [
     EnemyType("mini_boss", WHITE,  32, 85, 1350, 0.4, 3000, lambda lvl: max(0, (lvl - 10))),
 
     # Bosses — weight_fn always 0; spawned exclusively via boss_round logic
-    EnemyType("boss_spawner", GREY, 50, 150, 25000, 0.5, 0, lambda lvl: 0, boss_round=10, ability_fn=_boss_spawner_ability, ability_interval=25),
+    EnemyType("boss_spawner", GREY, 50, 150, 25000, 4.5, 0, lambda lvl: 0, boss_round=10, ability_fn=_boss_spawner_ability, ability_interval=25),
     EnemyType("boss_tank_spawner", PURPLE, 20, 300, 40000, 3.5, 0, lambda lvl: 0, boss_round=20, ability_fn=_boss_tank_spawner_ability, ability_interval=180),
 ]
 
@@ -97,14 +97,15 @@ class Enemy:
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
 
-    def update(self, player):
+    def update(self, player, dt):
         dx = player.x - self.x
         dy = player.y - self.y
         distance = sqrt(dx*dx + dy*dy)
 
         if distance > 0:
-            self.x += (dx / distance) * self.speed
-            self.y += (dy / distance) * self.speed
+            scale = self.speed * dt * 60
+            self.x += (dx / distance) * scale
+            self.y += (dy / distance) * scale
 
     def check_collision_with_player(self, player):
         if player._mask is None:

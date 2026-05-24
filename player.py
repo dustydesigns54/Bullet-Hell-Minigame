@@ -28,7 +28,7 @@ class Player:
         self.color = GREEN
         self.x = x
         self.y = y
-        self.sprite = pygame.image.load(os.path.join("Sprites", "Test Ship.png")).convert_alpha()
+        self.sprite = pygame.image.load(os.path.join("sprites", "test_ship_two_xtwo.png")).convert_alpha()
         self._draw_angle = 0
         self._mask = None
         self._rect = None
@@ -41,8 +41,9 @@ class Player:
         self._mask = pygame.mask.from_surface(rotated)
         screen.blit(rotated, self._rect)
 
-    def handle_movement(self, joystick):
+    def handle_movement(self, joystick, dt, sw, sh):
         if self.alive:
+            scale = self.speed * dt * 60
             if joystick:
                 # Controller input
                 left_x = joystick.get_axis(0)
@@ -51,30 +52,29 @@ class Player:
                 # Apply deadzone
                 deadzone = 0.15
                 if abs(left_x) > deadzone:
-                    self.x += left_x * self.speed
+                    self.x += left_x * scale
                 if abs(left_y) > deadzone:
-                    self.y += left_y * self.speed
+                    self.y += left_y * scale
             else:
                 # Keyboard input (WASD)
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_a]:
-                    self.x -= self.speed
+                    self.x -= scale
                 if keys[pygame.K_d]:
-                    self.x += self.speed
+                    self.x += scale
                 if keys[pygame.K_w]:
-                    self.y -= self.speed
+                    self.y -= scale
                 if keys[pygame.K_s]:
-                    self.y += self.speed
+                    self.y += scale
 
-        #set border restrictions
         if self.x - self.radius < 0:
             self.x = self.radius
-        if self.x + self.radius > WIDTH:
-            self.x = WIDTH - self.radius
+        if self.x + self.radius > sw:
+            self.x = sw - self.radius
         if self.y - self.radius < 0:
             self.y = self.radius
-        if self.y + self.radius > HEIGHT:
-            self.y = HEIGHT - self.radius
+        if self.y + self.radius > sh:
+            self.y = sh - self.radius
     
     def get_aim_direction(self, joystick):
         if joystick:

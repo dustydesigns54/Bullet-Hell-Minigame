@@ -52,23 +52,24 @@ def upgrade_selection_menu(screen, clock, joystick, player=None):
     card_w, card_h = 280, 340
     gap = 60
     total_w = len(upgrades) * card_w + (len(upgrades) - 1) * gap
-    start_x = (WIDTH - total_w) // 2
-    card_y = HEIGHT // 2 - card_h // 2
-
-    rects = [
-        pygame.Rect(start_x + i * (card_w + gap), card_y, card_w, card_h)
-        for i in range(len(upgrades))
-    ]
 
     selected = 0
     nav_cooldown = 0
 
     snapshot = screen.copy()
-    overlay = pygame.Surface((WIDTH, HEIGHT))
+    overlay = pygame.Surface((screen.get_width(), screen.get_height()))
     overlay.set_alpha(160)
     overlay.fill((20, 20, 40))
 
     while True:
+        sw, sh = screen.get_width(), screen.get_height()
+        start_x = (sw - total_w) // 2
+        card_y = sh // 2 - card_h // 2
+        rects = [
+            pygame.Rect(start_x + i * (card_w + gap), card_y, card_w, card_h)
+            for i in range(len(upgrades))
+        ]
+
         mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
@@ -109,7 +110,7 @@ def upgrade_selection_menu(screen, clock, joystick, player=None):
         screen.blit(overlay, (0, 0))
 
         title_surf = font_title.render("SELECT UPGRADE", True, WHITE)
-        screen.blit(title_surf, (WIDTH // 2 - title_surf.get_width() // 2, card_y - 100))
+        screen.blit(title_surf, (sw // 2 - title_surf.get_width() // 2, card_y - 100))
 
         for i, (upgrade, rect) in enumerate(zip(upgrades, rects)):
             is_selected = i == selected
@@ -158,25 +159,28 @@ def pause_menu(screen, clock, joystick, score=0, show_stats=True):
     font_title = pygame.font.SysFont(None, 80)
     font_btn = pygame.font.SysFont(None, 50)
 
-    # 0=Resume, 1=Toggle Stats, 2=Return to Menu
-    NUM_OPTIONS = 3
+    # 0=Resume, 1=Toggle Stats, 2=Toggle Fullscreen, 3=Return to Menu
+    NUM_OPTIONS = 4
     selected = 0
     nav_cooldown = 0
 
     btn_w, btn_h = 280, 55
-    btn_x = WIDTH // 2 - btn_w // 2
-    rects = [
-        pygame.Rect(btn_x, HEIGHT // 2, btn_w, btn_h),
-        pygame.Rect(btn_x, HEIGHT // 2 + 80, btn_w, btn_h),
-        pygame.Rect(btn_x, HEIGHT // 2 + 160, btn_w, btn_h),
-    ]
 
     snapshot = screen.copy()
-    overlay = pygame.Surface((WIDTH, HEIGHT))
+    overlay = pygame.Surface((screen.get_width(), screen.get_height()))
     overlay.set_alpha(130)
     overlay.fill((60, 60, 60))
 
     while True:
+        sw, sh = screen.get_width(), screen.get_height()
+        btn_x = sw // 2 - btn_w // 2
+        rects = [
+            pygame.Rect(btn_x, sh // 2,       btn_w, btn_h),
+            pygame.Rect(btn_x, sh // 2 + 80,  btn_w, btn_h),
+            pygame.Rect(btn_x, sh // 2 + 160, btn_w, btn_h),
+            pygame.Rect(btn_x, sh // 2 + 240, btn_w, btn_h),
+        ]
+
         mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
@@ -190,6 +194,8 @@ def pause_menu(screen, clock, joystick, score=0, show_stats=True):
                         return "resume", show_stats
                     elif selected == 1:
                         show_stats = not show_stats
+                    elif selected == 2:
+                        pygame.display.toggle_fullscreen()
                     else:
                         return "menu", show_stats
                 if event.key == pygame.K_UP:
@@ -203,6 +209,8 @@ def pause_menu(screen, clock, joystick, score=0, show_stats=True):
                             return "resume", show_stats
                         elif i == 1:
                             show_stats = not show_stats
+                        elif i == 2:
+                            pygame.display.toggle_fullscreen()
                         else:
                             return "menu", show_stats
             if event.type == pygame.JOYBUTTONDOWN:
@@ -211,6 +219,8 @@ def pause_menu(screen, clock, joystick, score=0, show_stats=True):
                         return "resume", show_stats
                     elif selected == 1:
                         show_stats = not show_stats
+                    elif selected == 2:
+                        pygame.display.toggle_fullscreen()
                     else:
                         return "menu", show_stats
                 if event.button == 1:  # B / Circle — resume
@@ -236,13 +246,14 @@ def pause_menu(screen, clock, joystick, score=0, show_stats=True):
         screen.blit(overlay, (0, 0))
 
         title = font_title.render("PAUSED", True, WHITE)
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT // 2 - 150))
+        screen.blit(title, (sw // 2 - title.get_width() // 2, sh // 2 - 150))
 
         font_score = pygame.font.SysFont(None, 45)
         score_surf = font_score.render(f"Score: {score}", True, WHITE)
-        screen.blit(score_surf, (WIDTH // 2 - score_surf.get_width() // 2, HEIGHT // 2 - 70))
+        screen.blit(score_surf, (sw // 2 - score_surf.get_width() // 2, sh // 2 - 70))
 
-        labels = ["Resume", "Hide Stats" if show_stats else "Show Stats", "Return to Menu"]
+        is_fullscreen = bool(screen.get_flags() & pygame.FULLSCREEN)
+        labels = ["Resume", "Hide Stats" if show_stats else "Show Stats", "Windowed" if is_fullscreen else "Fullscreen", "Return to Menu"]
         for i, (label, rect) in enumerate(zip(labels, rects)):
             color = WHITE if i == selected else GREY
             pygame.draw.rect(screen, color, rect, 2)
@@ -262,13 +273,15 @@ def main_menu(screen, clock, joystick, last_score=0):
     nav_cooldown = 0
 
     btn_w, btn_h = 200, 55
-    btn_x = WIDTH // 2 - btn_w // 2
-    rects = [
-        pygame.Rect(btn_x, HEIGHT // 2, btn_w, btn_h),
-        pygame.Rect(btn_x, HEIGHT // 2 + 80, btn_w, btn_h),
-    ]
 
     while True:
+        sw, sh = screen.get_width(), screen.get_height()
+        btn_x = sw // 2 - btn_w // 2
+        rects = [
+            pygame.Rect(btn_x, sh // 2,      btn_w, btn_h),
+            pygame.Rect(btn_x, sh // 2 + 80, btn_w, btn_h),
+        ]
+
         mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
@@ -313,21 +326,21 @@ def main_menu(screen, clock, joystick, last_score=0):
 
         # Draw background
         screen.fill(BLACK)
-        for i in range(0, HEIGHT, 50):
-            pygame.draw.rect(screen, DARKBLUE, (0, i, WIDTH, 1))
-        for i in range(25, HEIGHT, 50):
-            pygame.draw.rect(screen, DARKERBLUE, (0, i, WIDTH, 1))
-        for i in range(50, WIDTH, 50):
-            pygame.draw.rect(screen, DARKBLUE, (i, 0, 1, HEIGHT))
-        for i in range(25, WIDTH, 50):
-            pygame.draw.rect(screen, DARKERBLUE, (i, 0, 1, HEIGHT))
+        for i in range(0, sh, 50):
+            pygame.draw.rect(screen, DARKBLUE,   (0, i, sw, 1))
+        for i in range(25, sh, 50):
+            pygame.draw.rect(screen, DARKERBLUE, (0, i, sw, 1))
+        for i in range(50, sw, 50):
+            pygame.draw.rect(screen, DARKBLUE,   (i, 0, 1, sh))
+        for i in range(25, sw, 50):
+            pygame.draw.rect(screen, DARKERBLUE, (i, 0, 1, sh))
 
         title = font_title.render("Ball Game", True, WHITE)
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT // 2 - 150))
+        screen.blit(title, (sw // 2 - title.get_width() // 2, sh // 2 - 150))
 
         font_score = pygame.font.SysFont(None, 40)
         prev_surf = font_score.render(f"Previous Score: {last_score}", True, GREY)
-        screen.blit(prev_surf, (WIDTH // 2 - prev_surf.get_width() // 2, HEIGHT // 2 - 80))
+        screen.blit(prev_surf, (sw // 2 - prev_surf.get_width() // 2, sh // 2 - 80))
 
         for i, (label, rect) in enumerate(zip(options, rects)):
             color = WHITE if i == selected else GREY

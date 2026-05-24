@@ -15,7 +15,7 @@ def fire_spread(player, aim_direction, n, spread=0.15):
 
 def run_game(screen, clock, joystick):
     panel_font = pygame.font.SysFont(None, 24)
-    player = Player(WIDTH / 2, HEIGHT / 2)
+    player = Player(screen.get_width() / 2, screen.get_height() / 2)
     score = 0
     kills = 0
     og_score = 0
@@ -40,8 +40,9 @@ def run_game(screen, clock, joystick):
     alternator = 0
 
     def spawn_enemy(forced_type=None):
-        x_spawns = [0, WIDTH, random.randint(0, WIDTH), random.randint(0, WIDTH)]
-        y_spawns = [random.randint(0, HEIGHT), random.randint(0, HEIGHT), 0, HEIGHT]
+        _sw, _sh = screen.get_width(), screen.get_height()
+        x_spawns = [0, _sw, random.randint(0, _sw), random.randint(0, _sw)]
+        y_spawns = [random.randint(0, _sh), random.randint(0, _sh), 0, _sh]
         choice = random.randint(0, 3)
         enemies.append(Enemy(x_spawns[choice], y_spawns[choice], player.level, forced_type=forced_type))
 
@@ -50,20 +51,24 @@ def run_game(screen, clock, joystick):
     show_stats = True
 
     while True:
+        dt = min(clock.tick(0) / 1000.0, 0.05)  # seconds; capped to prevent spiral on lag spike
+        sw, sh = screen.get_width(), screen.get_height()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit", score
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     paused = True
+                if event.key == pygame.K_F11:
+                    pygame.display.toggle_fullscreen()
             if event.type == pygame.JOYBUTTONDOWN:
                 if event.button == 1:  # B / Circle
                     paused = True
 
-        player.handle_movement(joystick)
+        player.handle_movement(joystick, dt, sw, sh)
 
         if shoot_timer > 0:
-            shoot_timer -= 1
+            shoot_timer -= dt * 60
 
         aim_direction = player.get_aim_direction(joystick)
         if aim_direction is not None and shoot_timer <= 0:
@@ -78,20 +83,20 @@ def run_game(screen, clock, joystick):
             shoot_timer = bullet_delay
 
         for enemy in enemies:
-            enemy.update(player)
+            enemy.update(player, dt)
 
             if enemy.ability_fn is not None:
-                enemy.ability_timer += 1
+                enemy.ability_timer += dt * 60
                 if enemy.ability_timer >= enemy.ability_interval:
                     enemy.ability_fn(enemy, enemies, player.level)
                     enemy.ability_timer = 0
                 # Boss: survives contact, damage gated by cooldown
                 if enemy.contact_cooldown > 0:
-                    enemy.contact_cooldown -= 1
+                    enemy.contact_cooldown -= dt * 60
                 elif enemy.check_collision_with_player(player):
                     player.health -= enemy.dmg
                     damage_flash_timer = 40
-                    enemy.contact_cooldown = 90  # 1.5 seconds at 60fps
+                    enemy.contact_cooldown = 90
                     if player.health <= 0:
                         player.alive = False
             else:
@@ -117,20 +122,20 @@ def run_game(screen, clock, joystick):
                         if any(t.name == enemy.type_name for t in BOSS_ROUNDS.values()):
                             force_level_up = True
                     break
-            if bullet.x > WIDTH or bullet.x < 0 or bullet.y > HEIGHT or bullet.y < 0:
+            if bullet.x > sw or bullet.x < 0 or bullet.y > sh or bullet.y < 0:
                 try:
                     spawn_explosion(explosions, bullet.x, bullet.y, 3, bullet.color, 2.5)
                     bullets.remove(bullet)
                 except ValueError:
                     pass
-            bullet.update()
+            bullet.update(dt)
 
-        enemy_spawn_timer += 1
+        enemy_spawn_timer += dt * 60
         in_boss_round = (
             player.level in BOSS_ROUNDS
             and any(e.type_name == BOSS_ROUNDS[player.level].name for e in enemies)
         )
-        if not in_boss_round and upgrade_delay == 0 and not force_level_up:
+        if not in_boss_round and upgrade_delay <= 0 and not force_level_up:
             if enemy_spawn_timer >= enemy_spawn_delay:
                 for _ in range(wave_counter):
                     spawn_enemy()
@@ -159,21 +164,21 @@ def run_game(screen, clock, joystick):
         screen.fill(BLACK)
 
         if damage_flash_timer > 0:
-            t = damage_flash_timer / 60
-            damage_flash_timer -= 1
+            t = damage_flash_timer / 40
+            damage_flash_timer -= dt * 60
             grid_primary   = (int(t * 255), 0, int(DARKBLUE[2]   * (1 - t)))
             grid_secondary = (int(t * 255), 0, int(DARKERBLUE[2] * (1 - t)))
         else:
             grid_primary, grid_secondary = DARKBLUE, DARKERBLUE
 
-        for i in range(0, HEIGHT, 50):
-            pygame.draw.rect(screen, grid_primary, (0, i, WIDTH, 1))
-        for i in range(25, HEIGHT, 50):
-            pygame.draw.rect(screen, grid_secondary, (0, i, WIDTH, 1))
-        for i in range(50, WIDTH, 50):
-            pygame.draw.rect(screen, grid_primary, (i, 0, 1, HEIGHT))
-        for i in range(25, WIDTH, 50):
-            pygame.draw.rect(screen, grid_secondary, (i, 0, 1, HEIGHT))
+        for i in range(0, sh, 50):
+            pygame.draw.rect(screen, grid_primary,   (0, i, sw, 1))
+        for i in range(25, sh, 50):
+            pygame.draw.rect(screen, grid_secondary, (0, i, sw, 1))
+        for i in range(50, sw, 50):
+            pygame.draw.rect(screen, grid_primary,   (i, 0, 1, sh))
+        for i in range(25, sw, 50):
+            pygame.draw.rect(screen, grid_secondary, (i, 0, 1, sh))
 
         for enemy in enemies:
             enemy.draw_health_bar(screen)
@@ -181,7 +186,7 @@ def run_game(screen, clock, joystick):
 
         for particles in explosions:
             for p in particles:
-                p.update(WIDTH, HEIGHT)
+                p.update(sw, sh, dt)
                 p.draw(screen)
                 if not p.alive():
                     particles.remove(p)
@@ -215,10 +220,11 @@ def run_game(screen, clock, joystick):
                 ("Killed",    str(kills)),
                 ("Wave In",   f"{wave_in:.1f}s"),
             ]
-            draw_stat_panel(screen, panel_font, "ENEMIES", enemy_stats, WIDTH - 95, 20)
+            draw_stat_panel(screen, panel_font, "ENEMIES", enemy_stats, sw - 95, 20)
 
         # Top health bar — spans between the two stat panels
-        bar_x, bar_y, bar_w, bar_h = 200, 30, 1100, 18
+        bar_x, bar_y, bar_h = 200, 30, 18
+        bar_w = sw - 400
         fill_w = int(bar_w * (player.health / player.start_health))
         pygame.draw.rect(screen, RED,   (bar_x, bar_y, bar_w, bar_h))
         pygame.draw.rect(screen, GREEN, (bar_x, bar_y, fill_w, bar_h))
@@ -242,8 +248,8 @@ def run_game(screen, clock, joystick):
                 return result, score
 
         if upgrade_delay > 0:
-            upgrade_delay -= 1
-            if upgrade_delay == 0:
+            upgrade_delay -= dt * 60
+            if upgrade_delay <= 0:
                 choice = upgrade_selection_menu(screen, clock, joystick, player)
                 if choice == "health":
                     player.upgrade_health()
@@ -254,17 +260,16 @@ def run_game(screen, clock, joystick):
                     player.upgrade_speed()
                 if pending_boss_spawn:
                     boss_type = BOSS_ROUNDS[player.level]
-                    bx = random.randint(boss_type.radius, WIDTH - boss_type.radius)
+                    bx = random.randint(boss_type.radius, screen.get_width() - boss_type.radius)
                     enemies.append(Enemy(bx, -boss_type.radius, player.level,
                                         forced_type=boss_type.name))
                     pending_boss_spawn = False
 
         pygame.display.flip()
-        clock.tick(60)
 
 
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.DOUBLEBUF, vsync=1)
 pygame.display.set_caption("Ball Game")
 clock = pygame.time.Clock()
 

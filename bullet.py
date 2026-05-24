@@ -26,6 +26,7 @@ class Bullet:
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
     
-    def update(self):
-        self.x += cos(self.angle) * self.speed
-        self.y += sin(self.angle) * self.speed
+    def update(self, dt):
+        scale = self.speed * dt * 60
+        self.x += cos(self.angle) * scale
+        self.y += sin(self.angle) * scale
